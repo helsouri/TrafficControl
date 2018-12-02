@@ -41,8 +41,8 @@ void delay1(int howLong)
     {
         usleep(oneHunderdK);
         elapsedTime+=1;
-        actualTime=elapsedTime;
     }
+    actualTime=elapsedTime;
 }
 
 void delay2(int howLong, int *cur)
@@ -74,7 +74,7 @@ bool isRightTurn(int tempS, int tempD)
     int dir=tempS-tempD;
     if(dir==3 || dir==-1)
         return true;
-    else
+    else if( dir==-3 || dir==1)
         return false;
 }
 
@@ -82,9 +82,9 @@ void arriveAtIntersection(carInfo *tempCar)
 // Function called when a car arrives
 {
     int source=dirToInt(tempCar->originalDir);       // Where car coming from
-                                                    // Note here that the data provided is a bit confusing cars coming from south heading north
-                                                    // are actually marked as coming from north and continue heading north so we have some opposition
-                                                    // that we need to handle
+                                                     // Note here that the data provided is a bit confusing cars coming from south heading north
+                                                     // are actually marked as coming from north and continue heading north so we have some opposition
+                                                     // that we need to handle
     int destination=dirToInt(tempCar->targetDir);    // Where car is heading
     int val;                                        // local variable to help check locks and keep atomic behavior
     sem_wait(&printSem);
@@ -109,13 +109,13 @@ void arriveAtIntersection(carInfo *tempCar)
             sem_wait(&enterSem[destination]);
         }
     }
-    else if(isRightTurn(source, destination))
+    else if(isRightTurn(source, destination)==true)
     // Turning right
     {
         sem_wait(&enterSem[destination]);                       // Wait for no traffic then cross
         crossing[destination]++;                                // Increase traffic counter
     }
-    else
+    else if(isRightTurn(source, destination)==false)
     // Turning left
     {
         pthread_mutex_lock(&updateLock[(source+2)%4]);          // We need to set the source as turning left
@@ -129,10 +129,12 @@ void arriveAtIntersection(carInfo *tempCar)
             crossHolder[(source+2)%4]=LEFT;                     // Set this car to be turning left
         }
         val=crossing[(source+2)%4]++;                           // Increment crossing count ( remember sem is only signaled once all cars leave)
+        pthread_mutex_unlock(&updateLock[(source+2)%4]);
         if(val<1)
         {
             sem_wait(&enterSem[destination]);
         }
+
     }
     sem_post(&exitSem);                                         // Tell next car to search for chance to cross
     tempCar->delay=actualTime;                                   // update time to ensure correct value is printed
@@ -188,18 +190,7 @@ void exitIntersection(carInfo *tempCar)
         }
         pthread_mutex_unlock(&updateLock[destination]);
     }
-    else if(isRightTurn(source,destination))
-    // Turning right
-    {
-        pthread_mutex_lock(&updateLock[destination]);           // Grab lock for changes
-        crossing[destination]--;                                // Decrease counter for traffic
-        if(crossing[destination]==0)
-        {
-            sem_post(&enterSem[destination]);
-        }
-        pthread_mutex_unlock(&updateLock[destination]);
-    }
-    else
+    else if(isRightTurn(source,destination)==false)
     // turning left
     {
         pthread_mutex_lock(&updateLock[(source+2)%4]);               // Grab lock for atomic operations
@@ -211,6 +202,17 @@ void exitIntersection(carInfo *tempCar)
             sem_post(&enterSem[destination]);                        // release destination for next car
         }
         pthread_mutex_unlock(&updateLock[(source+2)%4]);             // Release lock for changing
+    }
+    else if (isRightTurn(source, destination)==true)
+    //turning right
+    {
+        pthread_mutex_lock(&updateLock[destination]);           // Grab lock for changes
+        crossing[destination]--;                                // Decrease counter for traffic
+        if(crossing[destination]==0)
+        {
+            sem_post(&enterSem[destination]);
+        }
+        pthread_mutex_unlock(&updateLock[destination]);         //release lock
     }
 }
 
