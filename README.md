@@ -50,3 +50,54 @@ going straight, and turning right, respectively) to cross the intersection and p
 You could use the Spin function to simulate the crossing.<br><br>
 *ExitIntersection* It is called to indicate that the caller has finished crossing the intersection and
 should take steps to let additional cars cross the intersection.<br><br>
+##  2 Testing
+For the traffic lights, fix all the time periods described above as follows: (TG = 18s, TY = 2s, TR = 20s).
+and (∆L = 3s, ∆S = 2s, ∆R = 1s). We assume that the lights on S and N turn in Green and the lights
+on E and W turn in Red at time 0 in the beginning of the testing. The simulation will run 30 seconds.
+In the main thread, you need to create one thread for each car and one thread to manage traffic
+lights. The arrival pattern in the simulator is described as follows: <br><br>
+<pre>
+cid   arrival_time  dir_original  dir_target<br>
+0       1.1             N           N<br>
+1       2.0             N           N<br>
+2       3.3             N           W<br>
+3       3.5             S           S<br>
+4       4.2             S           E<br>
+5       4.4             N           N<br>
+6       5.7             E           N<br>
+7       5.9             W           N<br>
+</pre>
+Associated with every car is a unique id (cid) as the car number, the arrival time (arrival time) for
+the given car, and the original dir original and targeted dir target directions. For example, the first
+line shows Car 0 arriving at Time 1.1 which originally goes northward and continue to go northward.
+Make sure that your simulation outputs information that clearly shows that your solution works. The
+message should indicate car number and both original and targeted directions. In particular, messages
+should be printed at the following times:<br>
+• Whenever a car arrives at an intersection;<br>
+• Whenever a car is crossing the intersection;<br>
+• Whenever a car exits from the intersection.<br>
+## 3 Expected Output
+Time 1.1: Car 0 (->N ->N) arriving<br>
+Time 1.1: Car 0 (->N ->N) crossing<br>
+Time 2.0: Car 1 (->N ->N) arriving<br>
+Time 2.0: Car 1 (->N ->N) crossing<br>
+Time 3.1: Car 0 (->N ->N) exiting<br>
+Time 3.3: Car 2 (->N ->W) arriving<br>
+Time 3.3: Car 2 (->N ->W) crossing<br>
+Time 3.5: Car 3 (->S ->S) arriving<br>
+Time 4.0: Car 1 (->N ->N) exiting<br>
+Time 4.2: Car 4 (->S ->E) arriving<br>
+Time 4.4: Car 5 (->N ->N) arriving<br>
+Time 4.4: Car 5 (->N ->N) crossing<br>
+Time 5.7: Car 6 (->E ->N) arriving<br>
+Time 5.9: Car 7 (->W ->N) arriving<br>
+Time 6.3: Car 2 (->N ->W) exiting<br>
+Time 6.3: Car 3 (->S ->S) crossing<br>
+Time 6.4: Car 5 (->N ->N) exiting<br>
+Time 6.4: Car 4 (->S ->E) crossing<br>
+Time 6.4: Car 7 (->W ->N) crossing<br>
+Time 7.4: Car 7 (->W ->N) exiting<br>
+Time 8.3: Car 3 (->S ->S) exiting<br>
+Time 9.4: Car 4 (->S ->E) exiting<br>
+Time 20.0: Car 6 (->E ->N) crossing<br>
+Time 23.0: Car 6 (->E ->N) exiting<br>
